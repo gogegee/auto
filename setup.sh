@@ -93,11 +93,25 @@ need_cn() {
   [[ "$BLOCK_CN" =~ ^[01]$ ]] || die "BLOCK_CN 只能是 0 或 1"
   CN_OK=1; save_state
 }
-need_ssh_port() {
+valid_port() { [[ "$1" =~ ^[0-9]+$ ]] && (( $1 >= 1024 && $1 <= 65535 && $1 != 443 && $1 != 8443 )); }
+need_ssh_port() { # 端口不写在脚本里，运行时手动输入 (上次输入会记在本机的状态文件里，仅作回车默认值)
   [[ -n "${SSHP_OK:-}" ]] && return 0
-  ask "新的 SSH 端口" SSH_PORT "${P_SSH_PORT:-36963}"
-  [[ "$SSH_PORT" =~ ^[0-9]+$ ]] && (( SSH_PORT >= 1024 && SSH_PORT <= 65535 )) || die "SSH 端口需在 1024-65535 之间"
-  (( SSH_PORT != 443 && SSH_PORT != 8443 )) || die "SSH 端口不能与 443/8443 冲突"
+  local a="" tries=0
+  if [[ -z "${SSH_PORT:-}" ]]; then
+    while (( tries < 3 )); do
+      if [[ -n "$P_SSH_PORT" ]]; then
+        prompt "请输入新的 SSH 端口 (1024-65535) [上次: $P_SSH_PORT]: " a || break
+        a="${a:-$P_SSH_PORT}"
+      else
+        prompt "请输入新的 SSH 端口 (1024-65535): " a || break
+      fi
+      if valid_port "$a"; then SSH_PORT="$a"; break; fi
+      warn "端口无效：需要是 1024-65535 之间的数字，且不能是 443 或 8443"
+      tries=$((tries + 1))
+    done
+  fi
+  [[ -n "${SSH_PORT:-}" ]] || die "未设置 SSH 端口 (非交互运行请设置 SSH_PORT 环境变量)"
+  valid_port "$SSH_PORT" || die "SSH 端口无效: $SSH_PORT (需要 1024-65535 之间，且不能是 443 或 8443)"
   SSHP_OK=1; save_state
 }
 KEY_OK=0
