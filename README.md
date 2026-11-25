@@ -5,7 +5,7 @@ VLESS + Reality 节点 + 系统加固的菜单式脚本，适用于 Debian 12/13
 ## 使用
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/<用户名>/<仓库>/main/setup-vps.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/gogegee/auto/refs/heads/dog/setup.sh)
 ```
 
 菜单：
